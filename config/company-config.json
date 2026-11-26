@@ -1,0 +1,48 @@
+{
+  "company": {
+    "name": "AI Content Agency",
+    "language": "ar",
+    "human_approval_required": true,
+    "automatic_publishing": false
+  },
+  "model_fallback": {
+    "description": "محاولات متسلسلة فقط وليست متوازية.",
+    "sequential_only": true,
+    "timeout_seconds": 45,
+    "max_tokens": 1200,
+    "providers": [
+      {
+        "name": "github_models",
+        "priority": 1,
+        "base_url": "https://models.github.ai/inference",
+        "model_env": "GITHUB_MODELS_MODEL",
+        "default_model": "openai/gpt-4o-mini",
+        "key_env": "GITHUB_TOKEN"
+      },
+      {
+        "name": "groq",
+        "priority": 2,
+        "base_url": "https://api.groq.com/openai/v1",
+        "model_env": "GROQ_MODEL",
+        "default_model": "llama-3.3-70b-versatile",
+        "key_env": "GROQ_API_KEY"
+      },
+      {
+        "name": "gemini",
+        "priority": 3,
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+        "model_env": "GEMINI_MODEL",
+        "default_model": "gemini-2.0-flash",
+        "key_env": "GEMINI_API_KEY"
+      },
+      {
+        "name": "other_free",
+        "priority": 4,
+        "base_url_env": "OTHER_FREE_BASE_URL",
+        "model_env": "OTHER_FREE_MODEL",
+        "default_model": "",
+        "key_env": "OTHER_FREE_API_KEY"
+      }
+    ]
+  }
+}
