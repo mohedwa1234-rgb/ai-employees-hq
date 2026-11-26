@@ -1,0 +1,39 @@
+name: Daily standup
+
+on:
+  schedule:
+    - cron: '0 9 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  models: read
+
+jobs:
+  standup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Generate standup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OTHER_FREE_BASE_URL: ${{ secrets.OTHER_FREE_BASE_URL }}
+          OTHER_FREE_API_KEY: ${{ secrets.OTHER_FREE_API_KEY }}
+          OTHER_FREE_MODEL: ${{ vars.OTHER_FREE_MODEL }}
+        run: |
+          mkdir -p reports
+          python scripts/run_agent.py \
+            --agent agents/ceo.md \
+            --task "أعد موجز اجتماع يومي موجزًا: الأولويات، ما أُنجز إن توفر، العوائق، والخطوات التالية. لا تختلق تقدمًا." \
+            --output "reports/standup-$(date -u +%F).md"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: daily-standup
+          path: reports/*.md
+          if-no-files-found: error
