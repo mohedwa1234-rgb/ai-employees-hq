@@ -1,0 +1,50 @@
+name: CEO orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: موضوع أو موجز الحملة
+        required: true
+        type: string
+      audience:
+        description: الجمهور المستهدف
+        required: false
+        type: string
+        default: غير محدد
+
+permissions:
+  contents: read
+  models: read
+
+jobs:
+  orchestrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Prepare output
+        run: mkdir -p reports
+      - name: Run CEO
+        env:
+          TOPIC: ${{ inputs.topic }}
+          AUDIENCE: ${{ inputs.audience }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OTHER_FREE_BASE_URL: ${{ secrets.OTHER_FREE_BASE_URL }}
+          OTHER_FREE_API_KEY: ${{ secrets.OTHER_FREE_API_KEY }}
+          OTHER_FREE_MODEL: ${{ vars.OTHER_FREE_MODEL }}
+        run: |
+          python scripts/run_agent.py \
+            --agent agents/ceo.md \
+            --task "أنشئ خطة وكالة لموضوع: ${TOPIC}. الجمهور: ${AUDIENCE}. أخرج الهدف والمهام المتسلسلة والمسؤوليات ومخرجات الوكلاء ونقاط الجودة والحوكمة. لا تنشر المحتوى ولا تفترض حقائق غير معطاة." \
+            --output reports/ceo-orchestration.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ceo-orchestration
+          path: reports/ceo-orchestration.md
+          if-no-files-found: error
