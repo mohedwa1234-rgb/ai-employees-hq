@@ -1,0 +1,44 @@
+name: Governance check
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: نطاق المراجعة
+        required: false
+        type: string
+        default: المستودع وقواعده
+
+permissions:
+  contents: read
+  models: read
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Run governance review
+        env:
+          REVIEW_SCOPE: ${{ inputs.scope }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OTHER_FREE_BASE_URL: ${{ secrets.OTHER_FREE_BASE_URL }}
+          OTHER_FREE_API_KEY: ${{ secrets.OTHER_FREE_API_KEY }}
+          OTHER_FREE_MODEL: ${{ vars.OTHER_FREE_MODEL }}
+        run: |
+          mkdir -p reports
+          python scripts/run_agent.py \
+            --agent agents/governance.md \
+            --task "راجع نطاقًا: ${REVIEW_SCOPE}. قدم قائمة للمخاطر والإجراءات وحدد حدود السياق بوضوح. المراجعة استشارية وتحتاج اعتمادًا بشريًا." \
+            --output reports/governance-review.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: governance-review
+          path: reports/governance-review.md
+          if-no-files-found: error
